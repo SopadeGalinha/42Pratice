@@ -49,15 +49,15 @@ int main(int ac, char **av)
 
 	i = -1;
 	j = -1;
-	if (ac > 1)
+	if (ac == 3)
 	{
-	while (av[1][++i])
-		if (ft_already_exists(av[1], i, av[1][i]))
-			write(1, &av[1][i], 1);
-	while (av[2][++j])
-		if (ft_already_exists(av[1], i, av[2][j]))
-			if (ft_already_exists(av[2], j, av[2][j]))
-				write(1, &av[2][j], 1);
+		while (av[1][++i])
+			if (ft_already_exists(av[1], i, av[1][i]))
+				write(1, &av[1][i], 1);
+		while (av[2][++j])
+			if (ft_already_exists(av[1], i, av[2][j]))
+				if (ft_already_exists(av[2], j, av[2][j]))
+					write(1, &av[2][j], 1);
 	}
 	write(1, "\n", 1);
 	return (0);
