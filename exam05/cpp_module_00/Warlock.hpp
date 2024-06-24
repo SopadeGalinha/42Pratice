@@ -1,24 +1,40 @@
 #ifndef WARLOCK_HPP
-#define WARLOCK_HPP
+#define  WARLOCK_HPP
 
-#include <iostream>
 #include <string>
+#include <iostream>
+
+
+using std::string;
+using std::cout;
+using std::endl;
 
 class Warlock {
-	Warlock(const Warlock &) {};
-	Warlock &operator=(const Warlock &);
+		// attributes
+		string _name;
+		string _title;
 
-	std::string _name;
-	std::string _title;
+		// Constructors
+		Warlock();
+		Warlock(const Warlock &otr);
+		
+		// Assigment Operator
+		Warlock & operator=(const Warlock &otr);
 
-public:
-	Warlock(const std::string &name, const std::string &title);
-	~Warlock();
+	public:
+		// Constructor & Destructor
+		Warlock(const string &name, const string &title);
+		~Warlock();
+		
+		// Getters
+		const string &getName() const;
+		const string &getTitle() const;
 
-	const std::string &getName() const;
-	const std::string &getTitle() const;
-	void setTitle(const std::string &title);
-	void introduce() const;
+		// Setter
+		void setTitle(const string & title);
+
+		// Method
+		void	introduce() const;
 };
 
-#endif // WARLOCK_HPP
+#endif
