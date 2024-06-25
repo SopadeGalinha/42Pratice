@@ -1,23 +1,23 @@
 #include "Warlock.hpp"
 
-Warlock::Warlock() {}
-
-Warlock::Warlock(const Warlock &otr) {
-	(void)otr;
+Warlock::Warlock(const Warlock &other) {
+	(void)other;
 };
 
-Warlock & Warlock::operator=(const Warlock &otr) {
-	(void)otr;
+Warlock & Warlock::operator=(const Warlock &other) {
+	(void)other;
 	return *this;
 }
 
 Warlock::Warlock(const string &name, const string &title) : \
 	_name(name), _title(title) {
-		cout << getName() << ": This looks like another boring day." << endl;
+		cout << getName() \
+		<< ": This looks like another boring day." << endl;
 }
 
 Warlock::~Warlock() {
-	cout << getName() << ": My job here is done!" << endl;
+	cout << getName() \
+	<< ": My job here is done!" << endl;
 }
 
 const string &Warlock::getName() const {
@@ -33,6 +33,8 @@ void Warlock::setTitle(const string & title) {
 }
 
 void	Warlock::introduce() const {
-	cout << getName() << ": I am " << getName() << ", " \
+	cout \
+	<< getName() << ": I am " \
+	<< getName()  << ", " 
 	<< getTitle() << "!" << endl;
 }
