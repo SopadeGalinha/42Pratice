@@ -1,31 +1,35 @@
 #include "ASpell.hpp"
 
-ASpell::ASpell() : _name("def"), _effect("def") {}
+ASpell::ASpell() : _name("default"), _effects("default") {}
 
-ASpell::ASpell(const ASpell& other) :
-	_name(other.getName()), _effect(other.getEffects()) {}
+ASpell::ASpell(const string &name, const string &effects) : _name(name), _effects(effects) {}
 
-ASpell& ASpell::operator=(const ASpell& other) {
+ASpell::ASpell(const ASpell &other)
+{
+	_name = other.getName();
+	_effects = other.getEffects();
+}
+
+ASpell &ASpell::operator=(const ASpell &other)
+{
 	if (this != &other) {
 		_name = other.getName();
-		_effect = other.getEffects();
+		_effects = other.getEffects();
 	}
 	return *this;
 }
 
-ASpell::~ASpell() {}
-
-ASpell::ASpell(const string& name, const string& effect) :
-	_name(name), _effect(effect) {}
-
-string const& ASpell::getName() const {
+const string &ASpell::getName() const {
 	return _name;
 }
 
-string const& ASpell::getEffects() const {
-	return _effect;
+const string &ASpell::getEffects() const {
+	return _effects;
 }
 
-void	ASpell::launch(const ATarget& target) {
+ASpell::~ASpell() {}
+
+
+void ASpell::launch(const ATarget &target) const {
 	target.getHitBySpell(*this);
-}	
+}

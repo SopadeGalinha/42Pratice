@@ -1,44 +1,32 @@
-#ifndef ASPELL_HPP
-# define ASPELL_HPP
+#ifndef ASPELL
+#define ASPELL
 
-# include <iostream>
-# include <string>
-# include "ATarget.hpp"
+#include <string>
+#include <iostream>
+#include "ATarget.hpp"
 
-class ATarget;
 using namespace std;
+class ATarget;
 
-// Coplien's form class 
-class ASpell {
+class ASpell
+{
+protected:
+	string _name;
+	string _effects;
 
-	protected:
-		// Atribuites
-		string	_name;
-		string	_effect;
+public:
+	ASpell();
+	ASpell(const ASpell &other);
+	ASpell &operator=(const ASpell &other);
+	ASpell(const string &name, const string &effects);
 
-	public:
-		// Constructor
-		ASpell();
+	const string &getName() const;
+	const string &getEffects() const;
 
-		// Copy constructor
-		ASpell(const ASpell& other);
+	virtual ~ASpell();
+	virtual ASpell *clone() const = 0;
 
-		// Constructor with parameters
-		ASpell(const string& name, const string& effect);
-
-		// Destructor
-		virtual ~ASpell();
-
-		// Assigment operator
-		ASpell& operator=(const ASpell& other);
-		
-		// Getters
-		const string &getName() const;
-		const string &getEffects() const;
-		
-		// Methods
-		void	launch(const ATarget& target);
-		virtual ASpell* clone() const = 0;
+	void launch(const ATarget &target) const;
 };
 
 #endif
