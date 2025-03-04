@@ -4,13 +4,11 @@ ATarget::ATarget() : _type("default") {}
 
 ATarget::ATarget(const string &type) : _type(type) {}
 
-ATarget::ATarget(const ATarget &other)
-{
+ATarget::ATarget(const ATarget &other) {
 	_type = other.getType();
 }
 
-ATarget &ATarget::operator=(const ATarget &other)
-{
+ATarget &ATarget::operator=(const ATarget &other) {
 	if (this != &other)
 		_type = other.getType();
 	return *this;

@@ -1,17 +1,15 @@
 #ifndef WARLOCK_HPP
 # define WARLOCK_HPP
 
-# include <iostream>
-# include <string>
 # include <map>
+# include <string>
+# include <iostream>
 # include "ATarget.hpp"
-# include "ASpell.hpp"
 # include "SpellBook.hpp"
 
 using namespace std;
 
 class Warlock {
-
 	private:
 		string _name;
 		string _title;
@@ -26,8 +24,10 @@ class Warlock {
 
 		string const& getName() const;
 		string const& getTitle() const;
+		
 		void	setTitle(const string& title);
 		void	introduce() const;
+		
 		void	learnSpell(ASpell* spell);
 		void	forgetSpell(const string &spell);
 		void	launchSpell(const string &spell, const ATarget& target);

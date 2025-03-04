@@ -11,7 +11,7 @@ SpellBook::~SpellBook() {
 
 void SpellBook::learnSpell(ASpell *spell) {
 	if (spell)
-		_book.insert(pair<string, ASpell *>(spell->getName(), spell->clone()));
+		_book[spell->getName()] = spell->clone();
 }
 
 void SpellBook::forgetSpell(string const &spell) {
@@ -20,7 +20,6 @@ void SpellBook::forgetSpell(string const &spell) {
         _book.erase(spell);
     }
 }
-
 
 ASpell *SpellBook::createSpell(string const &spell) {
     if (_book.count(spell))

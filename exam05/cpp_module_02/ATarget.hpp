@@ -9,22 +9,22 @@ using namespace std;
 
 class ASpell;
 
-class ATarget
-{
-protected:
-	string _type;
-public:
-	ATarget();
-	ATarget(const ATarget &other);
-	ATarget &operator=(const ATarget &other);
-	ATarget(const string &type);
+class ATarget {
+	protected:
+		string _type;
+		
+	public:
+		ATarget();
+		ATarget(const ATarget &other);
+		ATarget &operator=(const ATarget &other);
+		ATarget(const string &type);
 
-	const string &getType() const;
+		const string &getType() const;
 
-	virtual ~ATarget();
-	virtual ATarget *clone() const = 0;
+		virtual ~ATarget();
+		virtual ATarget *clone() const = 0;
 
-	void getHitBySpell(const ASpell &spell) const;
+		void getHitBySpell(const ASpell &spell) const;
 };
 
 #endif
