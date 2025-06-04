@@ -1,140 +1,96 @@
-#include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <netinet/in.h>
 #include <sys/select.h>
 
-#define ERR_FATAL "Fatal error\n"
-#define ERR_ARGS  "Wrong number of arguments\n"
+void initserver(int port);
+char *str_join(char *buf, char *add);
+int extract_message(char **buf, char **msg);
+
+
+#define FATAL "Fatal error\n"
+#define ARGS "Wrong number of arguments\n"
+#define LOCALHOST 2130706433
 
 typedef struct s_client {
-    int fd;
-    int id;
-    char *buffer;
-}               t_client;
+	int fd, id;
+	char *buffer;
+} t_client;
 
-static int      server_fd;
-static int      next_id = 0;
-static int      last_fd = 0;
-static fd_set   active_fds;
-static fd_set   read_fds;
-static t_client clients[1024];
-static struct sockaddr_in servaddr;
+t_client clients[1024];
+int server_fd, next_id = 0, last_fd = 0;
+fd_set active_fds, read_fds;
+struct sockaddr_in servaddr;
 
-/* Subject functions */
-char    *str_join(char *buf, char *add);
-int     extract_message(char **buf, char **msg);
-
-/* Mine functions */
-void    error(const char *msg);
-void    init_server(int port);
-void    send_to_all(int fd_sender, const char *msg);
-
-int     parse_port(char *arg);
-void    event_loop(void);
-void    accept_new_client(void);
-void    handle_client_data(int fd);
-
-int main(int ac, char **av) {
-    if (ac != 2)
-        error(ERR_ARGS);
-    init_server(atoi(av[1]));
-    event_loop();
-    return 0;
+void error(const char *msg) {
+	write(2, msg, strlen(msg));
+	exit(1);
 }
 
-void init_server(int port) {
-    server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_fd < 0 || port <= 0)
-        error(ERR_FATAL);
-
-    memset(&servaddr, 0, sizeof(servaddr));
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = htonl(2130706433);
-    servaddr.sin_port = htons(port);
-
-    if (bind(server_fd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0 
-    || listen(server_fd, SOMAXCONN) < 0)
-        error(ERR_FATAL);
-    FD_ZERO(&active_fds);
-    FD_SET(server_fd, &active_fds);
-    last_fd = server_fd;
+void send_to_all(int sender, const char *msg) {
+	size_t len = strlen(msg);
+	for (int fd = 0; fd <= last_fd; fd++)
+		if (FD_ISSET(fd, &active_fds) && (fd != sender && fd != server_fd))
+			send(fd, msg, len, 0);
 }
 
-void event_loop(void) {
-    while (1) {
+void handle(int fd) {
+	t_client *c = &clients[fd];
+	char tmp[1001];
+	ssize_t bytes = recv(fd, tmp, sizeof(tmp) -1, 0);
+	if (bytes <= 0) {
+		char msg[64];
+		snprintf(msg, sizeof(msg), "server: client %d just left\n", c->id);
+		send_to_all(fd, msg);
+		FD_CLR(fd, &active_fds);
+		free(c->buffer);
+		return;
+	}
+	tmp[bytes] = '\0';
+	c->buffer = str_join(c->buffer, tmp);
+	char *msg;
+	while (extract_message(&c->buffer, &msg)) {
+		char *fmt = malloc(strlen(msg) +32);
+		if (!fmt)
+			error(FATAL);
+		sprintf(fmt, "client %d: %s", c->id, msg);
+		send_to_all(c->fd, fmt);
+		free(msg);
+		free(fmt);
+	}
+}
+
+void accepts() {
+    int c = accept(server_fd, 0, 0);
+    if (c < 0) return;
+    if (c > last_fd) last_fd = c;
+    FD_SET(c, &active_fds);
+    clients[c] = (t_client){c, next_id++, 0};
+    char msg[64];
+    snprintf(msg, sizeof(msg), "server: client %d just arrived\n", clients[c].id);
+    send_to_all(c, msg);
+}
+
+void run() {
+    while(1) {
         read_fds = active_fds;
         if (select(last_fd + 1, &read_fds, 0, 0, 0) < 0)
             continue;
-
         if (FD_ISSET(server_fd, &read_fds))
-            accept_new_client();
-
-        for (int fd = server_fd + 1; fd <= last_fd; fd++) {
-            if (FD_ISSET(fd, &read_fds))
-                handle_client_data(fd);
-        }
+            accepts();
+        for (int fd = server_fd +1; fd <= last_fd; fd++)
+            if(FD_ISSET(fd, &read_fds))
+                handle(fd);
     }
 }
 
-void accept_new_client(void) {
-    int client_fd = accept(server_fd, 0, 0);
-    if (client_fd < 0)
-        return;
-
-    FD_SET(client_fd, &active_fds);
-    clients[client_fd] = (t_client){ client_fd, next_id++, 0 };
-    if (client_fd > last_fd)
-        last_fd = client_fd;
-
-    char msg[64];
-    snprintf(msg, sizeof(msg), "server: client %d just arrived\n", clients[client_fd].id);
-    send_to_all(client_fd, msg);
-}
-
-void handle_client_data(int fd) {
-    t_client *client = &clients[fd];
-    char temp[1001];
-    ssize_t bytes = recv(fd, temp, sizeof(temp) - 1, 0);
-
-    if (bytes <= 0) {
-        char msg[64];
-        snprintf(msg, sizeof(msg), "server: client %d just left\n", client->id);
-        send_to_all(fd, msg);
-        FD_CLR(fd, &active_fds);
-        close(fd);
-        free(client->buffer);
-        return;
-    }
-
-    temp[bytes] = '\0';
-    client->buffer = str_join(client->buffer, temp);
-
-    char *msg;
-    while (extract_message(&client->buffer, &msg) > 0) {
-        char *formatted = malloc(strlen(msg) + 32);
-        if (!formatted) {
-            free(msg);
-            continue;
-        }
-        sprintf(formatted, "client %d: %s", client->id, msg);
-        send_to_all(fd, formatted);
-        free(formatted);
-        free(msg);
-    }
-}
-
-void send_to_all(int fd_sender, const char *msg) {
-    int len = strlen(msg);
-	for (int fd = 0; fd < last_fd; fd++)
-    if (FD_ISSET(fd, &active_fds) && fd != fd_sender && fd != server_fd)
-    send(fd, msg, len, 0);
-}
-
-void error(const char *msg) {
-    write(2, msg, strlen(msg));
-    exit(1);
+int main(int ac, char **av) {
+	if (ac != 2)
+		error(ARGS);
+	initserver(atoi(av[1]));
+	run();
 }
 
 int extract_message(char **buf, char **msg) {
@@ -163,7 +119,6 @@ int extract_message(char **buf, char **msg) {
 	return (0);
 }
 
-
 char *str_join(char *buf, char *add) {
 	char *newbuf;
 	int len;
@@ -181,4 +136,21 @@ char *str_join(char *buf, char *add) {
 	free(buf);
 	strcat(newbuf, add);
 	return (newbuf);
+}
+
+void initserver(int port) {
+	server_fd = socket(AF_INET, SOCK_STREAM, 0);
+	if (server_fd < 0 || port <= 0) error(FATAL);
+
+	memset(&servaddr, 0, sizeof(servaddr));
+	servaddr.sin_family = AF_INET;
+	servaddr.sin_addr.s_addr = htonl(LOCALHOST);
+	servaddr.sin_port = htons(port);
+
+	if (bind(server_fd, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
+		error(FATAL);
+	if (listen(server_fd, SOMAXCONN));
+	FD_ZERO(&active_fds);
+	FD_SET(server_fd, &active_fds);
+	last_fd = server_fd;
 }
