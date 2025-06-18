@@ -45,7 +45,7 @@ int main(int ac, char **av) {
 	servaddr.sin_addr.s_addr = htonl(2130706433);
 	servaddr.sin_port = htons(port);
 	if ((bind(max_fd, (const struct sockaddr *)&servaddr, sizeof(servaddr))) != 0) fatal();
-	if (listen(max_fd, 10) != 0) fatal();
+	if (listen(max_fd, SOMAXCONN) != 0) fatal();
 
     int server_fd = max_fd;
     while(1 == 1) {
